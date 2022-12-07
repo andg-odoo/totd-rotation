@@ -1,71 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data>
 
-        <record model="totd.people" id="adda">
+        <record model="totd_management.people" id="adda">
             <field name="name">Adi</field>
         </record>
 
-        <record model="totd.people" id="andg">
+        <record model="totd_management.people" id="andg">
             <field name="name">Andrew</field>
         </record>
 
-        <record model="totd.people" id="evko">
+        <record model="totd_management.people" id="evko">
             <field name="name">Jenya</field>
         </record>
 
-        <record model="totd.people" id="myhy">
+        <record model="totd_management.people" id="myhy">
             <field name="name">Mylyna</field>
         </record>
 
-        <record model="totd.people" id="qung">
+        <record model="totd_management.people" id="qung">
             <field name="name">Quang</field>
         </record>
 
 
-        <record model="totd.totd" id="week1">
+        <record model="totd_management.totd" id="week1">
             <field name="week_num">1</field>
-            <field name="assignee_monday" ref="totd.adda"/>
-            <field name="assignee_tuesday" ref="totd.myhy"/>
-            <field name="assignee_wednesday" ref="totd.andg"/>
-            <field name="assignee_thursday" ref="totd.evko"/>
-            <field name="assignee_friday" ref="totd.qung"/>
+            <field name="assignee_monday" ref="totd_management.adda"/>
+            <field name="assignee_tuesday" ref="totd_management.myhy"/>
+            <field name="assignee_wednesday" ref="totd_management.andg"/>
+            <field name="assignee_thursday" ref="totd_management.evko"/>
+            <field name="assignee_friday" ref="totd_management.qung"/>
         </record>
 
-        <record model="totd.totd" id="week2">
+        <record model="totd_management.totd" id="week2">
             <field name="week_num">2</field>
-            <field name="assignee_monday" ref="totd.andg"/>
-            <field name="assignee_tuesday" ref="totd.evko"/>
-            <field name="assignee_wednesday" ref="totd.qung"/>
-            <field name="assignee_thursday" ref="totd.adda"/>
-            <field name="assignee_friday" ref="totd.myhy"/>
+            <field name="assignee_monday" ref="totd_management.andg"/>
+            <field name="assignee_tuesday" ref="totd_management.evko"/>
+            <field name="assignee_wednesday" ref="totd_management.qung"/>
+            <field name="assignee_thursday" ref="totd_management.adda"/>
+            <field name="assignee_friday" ref="totd_management.myhy"/>
         </record>
 
-        <record model="totd.totd" id="week3">
+        <record model="totd_management.totd" id="week3">
             <field name="week_num">3</field>
-            <field name="assignee_monday" ref="totd.evko"/>
-            <field name="assignee_tuesday" ref="totd.andg"/>
-            <field name="assignee_wednesday" ref="totd.myhy"/>
-            <field name="assignee_thursday" ref="totd.qung"/>
-            <field name="assignee_friday" ref="totd.adda"/>
+            <field name="assignee_monday" ref="totd_management.evko"/>
+            <field name="assignee_tuesday" ref="totd_management.andg"/>
+            <field name="assignee_wednesday" ref="totd_management.myhy"/>
+            <field name="assignee_thursday" ref="totd_management.qung"/>
+            <field name="assignee_friday" ref="totd_management.adda"/>
         </record>
 
-        <record model="totd.totd" id="week4">
+        <record model="totd_management.totd" id="week4">
             <field name="week_num">4</field>
-            <field name="assignee_monday" ref="totd.myhy"/>
-            <field name="assignee_tuesday" ref="totd.qung"/>
-            <field name="assignee_wednesday" ref="totd.adda"/>
-            <field name="assignee_thursday" ref="totd.andg"/>
-            <field name="assignee_friday" ref="totd.evko"/>
+            <field name="assignee_monday" ref="totd_management.myhy"/>
+            <field name="assignee_tuesday" ref="totd_management.qung"/>
+            <field name="assignee_wednesday" ref="totd_management.adda"/>
+            <field name="assignee_thursday" ref="totd_management.andg"/>
+            <field name="assignee_friday" ref="totd_management.evko"/>
         </record>
 
-        <record model="totd.totd" id="week5">
+        <record model="totd_management.totd" id="week5">
             <field name="week_num">5</field>
-            <field name="assignee_monday" ref="totd.qung"/>
-            <field name="assignee_tuesday" ref="totd.adda"/>
-            <field name="assignee_wednesday" ref="totd.evko"/>
-            <field name="assignee_thursday" ref="totd.myhy"/>
-            <field name="assignee_friday" ref="totd.andg"/>
+            <field name="assignee_monday" ref="totd_management.qung"/>
+            <field name="assignee_tuesday" ref="totd_management.adda"/>
+            <field name="assignee_wednesday" ref="totd_management.evko"/>
+            <field name="assignee_thursday" ref="totd_management.myhy"/>
+            <field name="assignee_friday" ref="totd_management.andg"/>
         </record>
     
     </data>
