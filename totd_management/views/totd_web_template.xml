@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <template id="books_website">
+            <t t-call="website.layout">
+                <t t-set="title">Library Management</t>
+                <div class="oe_structure">
+                    <div class="container">
+                        <h1>Available Books</h1>
+                        <t t-foreach="available_books" t-as="book">
+                            <div>
+                                <h3>
+                                    <span t-esc="book.name" />
+                                </h3>
+                                <div class="pl-2">
+                                    <h4>
+                                        Author:
+                                        <span t-esc="book.book_id.authors" />
+                                    </h4>
+                                    <h4>
+                                        Editors:
+                                        <span t-esc="book.book_id.editors" />
+                                    </h4>
+                                    <h4>
+                                        Publisher:
+                                        <span t-esc="book.book_id.publisher" />
+                                    </h4>
+                                    <h4>
+                                        Edition Date:
+                                        <span t-esc="book.book_id.edition_year" />
+                                    </h4>
+                                </div>
+                            </div>
+                            <hr />
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>
