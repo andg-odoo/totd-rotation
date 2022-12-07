@@ -3,36 +3,13 @@
     <data>
         <template id="books_website">
             <t t-call="website.layout">
-                <t t-set="title">Library Management</t>
+                <t t-set="title">TOTD</t>
                 <div class="oe_structure">
                     <div class="container">
-                        <h1>Available Books</h1>
-                        <t t-foreach="available_books" t-as="book">
-                            <div>
-                                <h3>
-                                    <span t-esc="book.name" />
-                                </h3>
-                                <div class="pl-2">
-                                    <h4>
-                                        Author:
-                                        <span t-esc="book.book_id.authors" />
-                                    </h4>
-                                    <h4>
-                                        Editors:
-                                        <span t-esc="book.book_id.editors" />
-                                    </h4>
-                                    <h4>
-                                        Publisher:
-                                        <span t-esc="book.book_id.publisher" />
-                                    </h4>
-                                    <h4>
-                                        Edition Date:
-                                        <span t-esc="book.book_id.edition_year" />
-                                    </h4>
-                                </div>
-                            </div>
-                            <hr />
-                        </t>
+                        <h1>Todays TOTD IS:</h1>
+                        <h2>
+                            <span t-esc="totd" />
+                        </h2>
                     </div>
                 </div>
             </t>

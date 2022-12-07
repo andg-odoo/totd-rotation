@@ -9,8 +9,10 @@
     "version": "0.1",
     "depends": ["base", "web"],
     "license": "LGPL-3",
-    "data": [
-        "views/totd_web_template.xml",
+    "demo": [
         "data/totd_data.xml"
+    ],
+    "data": [
+        "views/totd_web_template.xml"
     ],
 }

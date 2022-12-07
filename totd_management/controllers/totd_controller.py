@@ -13,5 +13,5 @@ class totdController(http.Controller):
         # )
         return http.request.render(
             "library_management.books_website",
-            {"available_books": available_books},
+            {"totd": available_books},
         )
