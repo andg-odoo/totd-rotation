@@ -50,6 +50,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL = int(os.getenv('CHANNEL_ID'))
 ROLE = int(os.getenv("ROLE_ID"))
 PATH = os.getenv('XLSX_PATH')
+MESSAGE_TIME = os.getenv('MESSAGE_TIME')
 
 import discord
 from discord.ext import commands
@@ -68,7 +69,9 @@ class TOTDBot(commands.Bot):
         self.add_commands()
 
     async def setup_hook(self) -> None:
+        # Increment week monday at midnight
         self.loop.create_task(self.background_task(time(0), self.increment_week, lambda x: x.weekday() == 0))
+        # Print TOTD at a specific time
         self.loop.create_task(self.background_task(self.WHEN, self.print_totd, lambda x: x.weekday() < 5))
 
 
@@ -118,7 +121,7 @@ class TOTDBot(commands.Bot):
             await ctx.send(totd_string)
 
 
-message_time = time(9, 0, 0)
+message_time = datetime.strptime(MESSAGE_TIME, '%H::%M::%S').time()
 bot = TOTDBot(message_time, path=PATH, channel=CHANNEL, role=ROLE, command_prefix="!", self_bot=False)
 
 async def main():
