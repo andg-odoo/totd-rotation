@@ -1,18 +1,53 @@
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
+import discord
+from discord.ext import commands
+from datetime import datetime, time, timedelta
+import asyncio
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+CHANNEL = int(os.getenv('CHANNEL_ID'))
+ROLE = int(os.getenv("ROLE_ID")) if os.getenv('ROLE_ID') else None
+PATH = os.getenv('XLSX_PATH')
+GDRIVE_ID = os.getenv('XLSX_ID')
+MESSAGE_TIME = os.getenv('MESSAGE_TIME')
+CURRENT_WEEK = int(os.getenv('CURRENT_WEEK'))
+
+
 class TOTD:
     def __init__(self, document: str, current_week: int):
         self.current_week = current_week - 1
+
+        document = self._fetch_drive(document)
         self._build_schedule(document)
 
+    def _fetch_drive(self, document_id: str, file_name: str = 'totd.xlsx') -> str:
+        if os.getenv('XLSX_ID'):
+            # If we have a Google Drive ID download the file using the credentials.json and store it locally to use instead of the other file.
+            gauth = GoogleAuth()
+
+            gauth.LocalWebserverAuth()
+            drive = GoogleDrive(gauth)
+            downloaded = drive.CreateFile({'id': document_id})
+            # downloaded.FetchMetadata(fields='modifiedDate')
+            downloaded.GetContentFile(
+                file_name, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            document_id = file_name
+        return document_id
 
     def _build_schedule(self, document: str):
         BACKUPS = 'BACKUP(S):'
         import pandas as pd
         df = pd.read_excel(document,
-                   sheet_name='TODChat Rotation', header=16, usecols="B:H")
+                           sheet_name='TODChat Rotation', header=16, usecols="B:H")
         week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
         self.schedule = [{day: "" for day in week_days}
-                    for week in df.columns[:5]]
+                         for week in df.columns[:5]]
 
         self.backups = [name for name in df[BACKUPS].dropna()]
 
@@ -41,28 +76,13 @@ class TOTD:
         import random
         return random.choice(self.backups).upper()
 
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-CHANNEL = int(os.getenv('CHANNEL_ID'))
-ROLE = int(os.getenv("ROLE_ID"))
-PATH = os.getenv('XLSX_PATH')
-MESSAGE_TIME = os.getenv('MESSAGE_TIME')
-CURRENT_WEEK = int(os.getenv('CURRENT_WEEK'))
-
-import discord
-from discord.ext import commands
-from datetime import datetime, time, timedelta
-import asyncio
 
 class TOTDBot(commands.Bot):
     def __init__(self, command_prefix, self_bot, **kwargs):
         intents = discord.Intents.all()
-        super().__init__(command_prefix=command_prefix, help_command=None, intents=intents, self_bot=self_bot)
-        self.WHEN = kwargs.get('time', time(9,0,0))
+        super().__init__(command_prefix=command_prefix,
+                         help_command=None, intents=intents, self_bot=self_bot)
+        self.WHEN = kwargs.get('time', time(9, 0, 0))
         self.channel = self.get_channel(kwargs.get('channel'))
         self.role = kwargs.get('role')
         path = kwargs.get('path')
@@ -71,10 +91,11 @@ class TOTDBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         # Increment week monday at midnight
-        self.loop.create_task(self.background_task(time(0), self.increment_week, lambda x: x.weekday() == 0))
+        self.loop.create_task(self.background_task(
+            time(0), self.increment_week, lambda x: x.weekday() == 0))
         # Print TOTD at a specific time
-        self.loop.create_task(self.background_task(self.WHEN, self.print_totd, lambda x: x.weekday() < 5))
-
+        self.loop.create_task(self.background_task(
+            self.WHEN, self.print_totd, lambda x: x.weekday() < 5))
 
     async def increment_week(self):
         await self.wait_until_ready()
@@ -96,7 +117,8 @@ class TOTDBot(commands.Bot):
         now = datetime.now()
         # If we are past the time we want, wait until midnight
         if now.time() > WHEN:
-            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+            tomorrow = datetime.combine(
+                now.date() + timedelta(days=1), time(0))
             seconds = (tomorrow - now).total_seconds()
             await asyncio.sleep(seconds)
         while True:
@@ -109,7 +131,8 @@ class TOTDBot(commands.Bot):
             if cond(datetime.now()):
                 await task()
             # Sleep until midnight
-            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+            tomorrow = datetime.combine(
+                now.date() + timedelta(days=1), time(0))
             seconds = (tomorrow - now).total_seconds()
             await asyncio.sleep(seconds)
 
@@ -128,12 +151,13 @@ class TOTDBot(commands.Bot):
 
 message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').time()
 bot = TOTDBot(command_prefix="!",
-            self_bot=False,
-            time=message_time,
-            path=PATH,
-            channel=CHANNEL,
-            role=ROLE,
-            week=CURRENT_WEEK)
+              self_bot=False,
+              time=message_time,
+              path=GDRIVE_ID,
+              channel=CHANNEL,
+              role=ROLE,
+              week=CURRENT_WEEK)
+
 
 async def main():
     await bot.start(TOKEN,)

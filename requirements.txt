@@ -3,3 +3,4 @@ discord
 python-dotenv
 pandas
 openpyxl
+pydrive2
