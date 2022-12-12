@@ -51,21 +51,22 @@ CHANNEL = int(os.getenv('CHANNEL_ID'))
 ROLE = int(os.getenv("ROLE_ID"))
 PATH = os.getenv('XLSX_PATH')
 MESSAGE_TIME = os.getenv('MESSAGE_TIME')
+CURRENT_WEEK = int(os.getenv('CURRENT_WEEK'))
 
 import discord
 from discord.ext import commands
 from datetime import datetime, time, timedelta
 import asyncio
 
-
 class TOTDBot(commands.Bot):
-    def __init__(self, message_time: time, path: str, channel: int, role: int, command_prefix, self_bot):
+    def __init__(self, command_prefix, self_bot, **kwargs):
         intents = discord.Intents.all()
         super().__init__(command_prefix=command_prefix, help_command=None, intents=intents, self_bot=self_bot)
-        self.WHEN = message_time
-        self.channel = channel
-        self.role = role
-        self.tracker = TOTD(path, 4)
+        self.WHEN = kwargs.get('time', time(9,0,0))
+        self.channel = self.get_channel(kwargs.get('channel'))
+        self.role = kwargs.get('role')
+        path = kwargs.get('path')
+        self.tracker = TOTD(path, kwargs.get('week'))
         self.add_commands()
 
     async def setup_hook(self) -> None:
@@ -79,12 +80,17 @@ class TOTDBot(commands.Bot):
         await self.wait_until_ready()
         self.tracker.next_week()
 
+    def __repr__(self):
+        if self.role:
+            totd_string = "<@&%d>: %s" % (self.role, self.tracker)
+        else:
+            totd_string = "Good Morning: %s" % (self.tracker)
+        return totd_string
 
     async def print_totd(self):  # Fired every day
         await self.wait_until_ready()
-        channel = self.get_channel(self.channel)
-        totd_string = "<@&%d>: %s" % (self.role, self.tracker)
-        await channel.send(totd_string)
+        if self.channel:
+            await self.channel.send(self)
 
     async def background_task(self, WHEN, task, cond):
         now = datetime.now()
@@ -100,7 +106,7 @@ class TOTDBot(commands.Bot):
             seconds_until_target = (target_time - now).total_seconds()
             await asyncio.sleep(seconds_until_target)
             # Check passed in condition before running task
-            if cond(now):
+            if cond(datetime.now()):
                 await task()
             # Sleep until midnight
             tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
@@ -117,15 +123,20 @@ class TOTDBot(commands.Bot):
 
         @self.command(hidden=True)
         async def totd(ctx):
-            totd_string = "<@&%d>: %s" % (self.role, self.tracker)
-            await ctx.send(totd_string)
+            await ctx.send(self)
 
 
-message_time = datetime.strptime(MESSAGE_TIME, '%H::%M::%S').time()
-bot = TOTDBot(message_time, path=PATH, channel=CHANNEL, role=ROLE, command_prefix="!", self_bot=False)
+message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').time()
+bot = TOTDBot(command_prefix="!",
+            self_bot=False,
+            time=message_time,
+            path=PATH,
+            channel=CHANNEL,
+            role=ROLE,
+            week=CURRENT_WEEK)
 
 async def main():
-    await bot.start(TOKEN)
+    await bot.start(TOKEN,)
 
 if __name__ == "__main__":
     asyncio.run(main())
