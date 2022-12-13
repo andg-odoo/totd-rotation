@@ -11,6 +11,7 @@
     "license": "LGPL-3",
     "data": [
         "data/totd_data.xml",
-        "views/totd_web_template.xml"
+        "views/totd_web_template.xml",
+        "data/totd_cron.xml"
     ],
 }
