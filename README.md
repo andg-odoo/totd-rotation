@@ -9,7 +9,8 @@ To set this up, follow the discord join link obtained from Andg and add the Bot 
 ```
 DISCORD_TOKEN:	The Bot's Access Token
 CHANNEL_ID:	The channel ID you want it to send the message in.
-ROLE_ID:	The role ID if you want it to ping a role every time it messages (Otherwise will just start with Good Morning)
+ROLE_ID:	The role ID if you want it to ping a role every time it messages 
+		(Otherwise will just start with Good Morning)
 
 XLSX_PATH:	The path to the locally downloaded spreadsheet if not connected to drive
 GDRIVE_ID:	The file ID for for the spreadsheet in google drive
@@ -20,24 +21,22 @@ CURRENT_WEEK:	The current TOTD rotation week necessary for kickstarting the serv
 
 ### Commands:
 
-`!totd`: 
+`!totd`:
 
     Will print out the current TOTD with the backup randomly selected from the list of backups:
 
-> *
->     "Good Morning: Todays TOTD is:**XX** with **YY** as Backup"*
+    *"Good Morning: Todays TOTD is: **XX** with **YY** as Backup"*
 
     If a`ROLE_ID` is passed to the .env file then it will ping that role instead:
 
-> *
->     "**@support**: Todays TOTD is: **XX** with **YY** as Backup"*
+    *
+    "**@support**: Todays TOTD is: **XX** with **YY** as Backup"*
 
     This message will automatically run at a specified each day in a set channel based off of`CHANNEL_ID` and `MESSAGE_TIME` environment variables. (Default to 9 am local time)
 
 `!set-week week_num`:
 
     This will set the TOTD week number in-case the bot gets out of sync or needs to be adjusted without having to change the env variable.
-
 
 ### Setup:
 
