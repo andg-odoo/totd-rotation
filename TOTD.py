@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime, time, timedelta
 import asyncio
+import random
 
 from dotenv import load_dotenv
 import os
@@ -13,7 +14,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL = int(os.getenv('CHANNEL_ID'))
 ROLE = int(os.getenv("ROLE_ID")) if os.getenv('ROLE_ID') else None
 PATH = os.getenv('XLSX_PATH')
-GDRIVE_ID = os.getenv('XLSX_ID')
+GDRIVE_ID = os.getenv('GDRIVE_ID')
 MESSAGE_TIME = os.getenv('MESSAGE_TIME')
 CURRENT_WEEK = int(os.getenv('CURRENT_WEEK'))
 
@@ -26,7 +27,7 @@ class TOTD:
         self._build_schedule(document)
 
     def _fetch_drive(self, document_id: str, file_name: str = 'totd.xlsx') -> str:
-        if os.getenv('XLSX_ID'):
+        if os.getenv('GDRIVE_ID'):
             # If we have a Google Drive ID download the file using the credentials.json and store it locally to use instead of the other file.
             gauth = GoogleAuth()
 
@@ -69,11 +70,12 @@ class TOTD:
         return self.schedule[self.current_week][self.date].upper()
 
     def __repr__(self):
+        if self.date == 'Saturday' or self.date == 'Sunday':
+            return 'No TOTD today it\'s a weekend!'
         return 'Todays TOTD is: **%s** with **%s** as Backup' % (self.totd, self.backup)
 
     @property
     def backup(self):
-        import random
         return random.choice(self.backups).upper()
 
 
@@ -85,8 +87,7 @@ class TOTDBot(commands.Bot):
         self.WHEN = kwargs.get('time', time(9, 0, 0))
         self.channel = self.get_channel(kwargs.get('channel'))
         self.role = kwargs.get('role')
-        path = kwargs.get('path')
-        self.tracker = TOTD(path, kwargs.get('week'))
+        self.tracker = TOTD(kwargs.get('path'), kwargs.get('week'))
         self.add_commands()
 
     async def setup_hook(self) -> None:
@@ -147,6 +148,19 @@ class TOTDBot(commands.Bot):
         @self.command(hidden=True)
         async def totd(ctx):
             await ctx.send(self)
+
+        @self.command(name='set-week', hidden=True)
+        async def set_week(ctx, week_num):
+            try:
+                int_week = int(week_num)
+                int_week -= 1 # decrement to 0 index internally
+                if int_week >= 0 and int_week < 5:
+                    self.tracker.current_week = int_week
+                    await ctx.send("*It is now week:* **%s**" % (self.tracker.current_week + 1))
+                else:
+                    await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
+            except:
+                await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
 
 
 message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').time()
