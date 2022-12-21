@@ -23,20 +23,15 @@ CURRENT_WEEK:	The current TOTD rotation week necessary for kickstarting the serv
 
 `!totd`:
 
-    Will print out the current TOTD with the backup randomly selected from the list of backups:
-
-    *"Good Morning: Todays TOTD is: **XX** with **YY** as Backup"*
-
-    If a`ROLE_ID` is passed to the .env file then it will ping that role instead:
-
-    *
-    "**@support**: Todays TOTD is: **XX** with **YY** as Backup"*
-
-    This message will automatically run at a specified each day in a set channel based off of`CHANNEL_ID` and `MESSAGE_TIME` environment variables. (Default to 9 am local time)
+- Will print out the current TOTD with the backup randomly selected from the list of backups:
+  - *"Good Morning: Todays TOTD is:**XX** with **YY** as Backup"*
+- If a `ROLE_ID` is passed to the .env file then it will ping that role instead:
+  - *"**@support**: Todays TOTD is: **XX** with **YY** as Backup"*
+- This message will automatically run at a specified each day in a set channel based off of `CHANNEL_ID` and `MESSAGE_TIME` environment variables. (Default to 9 am local time)
 
 `!set-week week_num`:
 
-    This will set the TOTD week number in-case the bot gets out of sync or needs to be adjusted without having to change the env variable.
+- This will set the TOTD week number in-case the bot gets out of sync or needs to be adjusted without having to change the env variable.
 
 ### Setup:
 
