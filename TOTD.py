@@ -148,6 +148,7 @@ class TOTDBot(commands.Bot):
         print(self.user.name)
         print(self.user.id)
         print(f'Sending next message at: {self.WHEN}')
+        print(f'It is currently {to_timezone(datetime.now())}')
         print('------')
 
     def add_commands(self):
