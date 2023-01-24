@@ -79,12 +79,18 @@ class TOTD:
         return random.choice(self.backups).upper()
 
 
+def to_timezone(timestamp: time|datetime, zone=ZoneInfo('US/Pacific')):
+    if isinstance(timestamp, time):
+        return timestamp.replace(tzinfo=zone)
+    elif isinstance(timestamp, datetime):
+        return timestamp.astimezone(zone)
+
 class TOTDBot(commands.Bot):
     def __init__(self, command_prefix, self_bot, **kwargs):
         intents = discord.Intents.all()
         super().__init__(command_prefix=command_prefix,
                          help_command=None, intents=intents, self_bot=self_bot)
-        self.WHEN = kwargs.get('time', time(9, 0, 0, tzinfo=ZoneInfo('US/Pacific')))
+        self.WHEN = to_timezone(kwargs.get('time', time(9, 0, 0)))
         self.channel = self.get_channel(kwargs.get('channel'))
         self.role = kwargs.get('role')
         self.tracker = TOTD(kwargs.get('path'), kwargs.get('week'))
@@ -93,7 +99,7 @@ class TOTDBot(commands.Bot):
     async def setup_hook(self) -> None:
         # Increment week monday at midnight
         self.loop.create_task(self.background_task(
-            time(0), self.increment_week, lambda x: x.weekday() == 0))
+            to_timezone(time(0)), self.increment_week, lambda x: x.weekday() == 0))
         # Print TOTD at a specific time
         self.loop.create_task(self.background_task(
             self.WHEN, self.print_totd, lambda x: x.weekday() < 5))
@@ -115,25 +121,25 @@ class TOTDBot(commands.Bot):
             await self.channel.send(self)
 
     async def background_task(self, WHEN, task, cond):
-        now = datetime.now().astimezone(ZoneInfo('US/Pacific'))
+        now = to_timezone(datetime.now())
         # If we are past the time we want, wait until midnight
         if now.timetz() > WHEN:
-            tomorrow = datetime.combine(
-                now.date() + timedelta(days=1), time(0), ZoneInfo('US/Pacific'))
+            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+            tomorrow = to_timezone(tomorrow)
             seconds = (tomorrow - now).total_seconds()
             await asyncio.sleep(seconds)
         while True:
             # Sleep until specific time
-            now = datetime.now().astimezone(ZoneInfo('US/Pacific'))
-            target_time = datetime.combine(now.date(), WHEN, ZoneInfo('US/Pacific'))
+            now = to_timezone(datetime.now())
+            target_time = to_timezone(datetime.combine(now.date(), WHEN))
             seconds_until_target = (target_time - now).total_seconds()
             await asyncio.sleep(seconds_until_target)
             # Check passed in condition before running task
-            if cond(datetime.now().astimezone(ZoneInfo('US/Pacific'))):
+            if cond(to_timezone(datetime.now())):
                 await task()
             # Sleep until midnight
-            tomorrow = datetime.combine(
-                now.date() + timedelta(days=1), time(0), ZoneInfo('US/Pacific'))
+            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+            tomorrow = to_timezone(tomorrow)
             seconds = (tomorrow - now).total_seconds()
             await asyncio.sleep(seconds)
 
@@ -164,8 +170,8 @@ class TOTDBot(commands.Bot):
                 await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
 
 
-message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').astimezone(ZoneInfo('US/Pacific')).timetz()
-print(message_time)
+message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').time()
+message_time = to_timezone(message_time)
 bot = TOTDBot(command_prefix="!",
               self_bot=False,
               time=message_time,
