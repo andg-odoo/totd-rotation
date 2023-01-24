@@ -3,6 +3,7 @@ from pydrive2.drive import GoogleDrive
 import discord
 from discord.ext import commands
 from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
 import asyncio
 import random
 
@@ -62,7 +63,6 @@ class TOTD:
 
     @property
     def date(self):
-        from datetime import datetime
         return datetime.today().strftime('%A')
 
     @property
@@ -84,7 +84,7 @@ class TOTDBot(commands.Bot):
         intents = discord.Intents.all()
         super().__init__(command_prefix=command_prefix,
                          help_command=None, intents=intents, self_bot=self_bot)
-        self.WHEN = kwargs.get('time', time(9, 0, 0))
+        self.WHEN = kwargs.get('time', time(9, 0, 0, tzinfo=ZoneInfo('US/Pacific')))
         self.channel = self.get_channel(kwargs.get('channel'))
         self.role = kwargs.get('role')
         self.tracker = TOTD(kwargs.get('path'), kwargs.get('week'))
@@ -115,25 +115,25 @@ class TOTDBot(commands.Bot):
             await self.channel.send(self)
 
     async def background_task(self, WHEN, task, cond):
-        now = datetime.now()
+        now = datetime.now().astimezone(ZoneInfo('US/Pacific'))
         # If we are past the time we want, wait until midnight
-        if now.time() > WHEN:
+        if now.timetz() > WHEN:
             tomorrow = datetime.combine(
-                now.date() + timedelta(days=1), time(0))
+                now.date() + timedelta(days=1), time(0), ZoneInfo('US/Pacific'))
             seconds = (tomorrow - now).total_seconds()
             await asyncio.sleep(seconds)
         while True:
             # Sleep until specific time
-            now = datetime.now()
-            target_time = datetime.combine(now.date(), WHEN)
+            now = datetime.now().astimezone(ZoneInfo('US/Pacific'))
+            target_time = datetime.combine(now.date(), WHEN, ZoneInfo('US/Pacific'))
             seconds_until_target = (target_time - now).total_seconds()
             await asyncio.sleep(seconds_until_target)
             # Check passed in condition before running task
-            if cond(datetime.now()):
+            if cond(datetime.now().astimezone(ZoneInfo('US/Pacific'))):
                 await task()
             # Sleep until midnight
             tomorrow = datetime.combine(
-                now.date() + timedelta(days=1), time(0))
+                now.date() + timedelta(days=1), time(0), ZoneInfo('US/Pacific'))
             seconds = (tomorrow - now).total_seconds()
             await asyncio.sleep(seconds)
 
@@ -141,6 +141,7 @@ class TOTDBot(commands.Bot):
         print('Logged in as')
         print(self.user.name)
         print(self.user.id)
+        print(f'Sending next message at: {self.WHEN}')
         print('------')
 
     def add_commands(self):
@@ -163,7 +164,8 @@ class TOTDBot(commands.Bot):
                 await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
 
 
-message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').time()
+message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').astimezone(ZoneInfo('US/Pacific')).timetz()
+print(message_time)
 bot = TOTDBot(command_prefix="!",
               self_bot=False,
               time=message_time,
