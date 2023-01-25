@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <template id="totd_website">
+            <t t-call="website.layout">
+                <t t-set="title">ToTD Rotation</t>
+                <div class="oe_structure">
+                    <div class="container">
+                        <h1 t-out="totd"/>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>
