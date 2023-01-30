@@ -6,7 +6,7 @@
                 <t t-set="title">ToTD Rotation</t>
                 <div class="oe_structure">
                     <div class="container">
-                        <h1 t-out="totd"/>
+                        <h1>Today's TOTD is: <span t-out="totd"/> with <span t-out="backup"/> as Backup </h1>
                     </div>
                 </div>
             </t>

@@ -85,6 +85,9 @@ class totdRotationController(http.Controller):
         # )
         totd = TOTD(GDRIVE_ID, CURRENT_WEEK)
         return http.request.render(
-            "library_management.books_website",
-            {"totd": totd},
+            "totd_rotation.totd_website",
+            {
+                "totd": totd.totd,
+                "backup": totd.backup
+            },
         )
