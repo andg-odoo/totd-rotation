@@ -87,10 +87,7 @@ class TOTD:
 
 
 def to_timezone(timestamp: time|datetime, zone=ZoneInfo('US/Pacific')):
-    if isinstance(timestamp, time):
-        return timestamp.replace(tzinfo=zone)
-    elif isinstance(timestamp, datetime):
-        return timestamp.astimezone(zone)
+    return timestamp.replace(tzinfo=zone)
 
 class TOTDBot(commands.Bot):
     def __init__(self, command_prefix, self_bot, **kwargs):
@@ -128,30 +125,30 @@ class TOTDBot(commands.Bot):
             await self.channel.send(self)
 
     async def background_task(self, WHEN, task, cond):
-        now = to_timezone(datetime.now())
+        now = datetime.now(ZoneInfo('US/Pacific'))
         logger.info(f"It is now: {now.timetz()}, waiting until {WHEN}")
         # If we are past the time we want, wait until midnight
         if now.timetz() > WHEN:
-            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
-            tomorrow = to_timezone(tomorrow)
+            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0), ZoneInfo('US/Pacific'))
             seconds = (tomorrow - now).total_seconds()
             logger.info(f"I need to sleep {seconds} seconds until midnight")
             await asyncio.sleep(seconds)
         while True:
             # Sleep until specific time
-            now = to_timezone(datetime.now())
-            target_time = to_timezone(datetime.combine(now.date(), WHEN))
+            now = datetime.now(ZoneInfo('US/Pacific'))
+            target_time = datetime.combine(now.date(), WHEN, ZoneInfo('US/Pacific'))
+            logger.info(target_time)
             seconds_until_target = (target_time - now).total_seconds()
             logger.info(f"I need to sleep {seconds} seconds until {WHEN}")
             await asyncio.sleep(seconds_until_target)
             # Check passed in condition before running task
             logger.info("Inside: Done waiting, checking condition")
-            if cond(to_timezone(datetime.now())):
-                logger.info(f"Performing task at: {to_timezone(datetime.now())}")
+            now = datetime.now(ZoneInfo('US/Pacific'))
+            if cond(now):
+                logger.info(f"Performing task at: {now}")
                 await task()
             # Sleep until midnight
-            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
-            tomorrow = to_timezone(tomorrow)
+            tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0), ZoneInfo('US/Pacific'))
             seconds = (tomorrow - now).total_seconds()
             logger.info(f"Done with task, I need to sleep {seconds} seconds until {WHEN}")
             await asyncio.sleep(seconds)
@@ -161,7 +158,7 @@ class TOTDBot(commands.Bot):
         logger.info(self.user.name)
         logger.info(self.user.id)
         logger.info(f'Sending next message at: {self.WHEN}')
-        logger.info(f'It is currently {to_timezone(datetime.now())}')
+        logger.info(f'It is currently {datetime.now(ZoneInfo("US/Pacific"))}')
         logger.info('------')
 
     def add_commands(self):
@@ -184,8 +181,7 @@ class TOTDBot(commands.Bot):
                 await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
 
 
-message_time = datetime.strptime(MESSAGE_TIME, '%H:%M:%S').time()
-message_time = to_timezone(message_time)
+message_time = to_timezone(datetime.strptime(MESSAGE_TIME, '%H:%M:%S')).timetz()
 bot = TOTDBot(command_prefix="!",
               self_bot=False,
               time=message_time,
