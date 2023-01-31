@@ -10,6 +10,12 @@ import random
 from dotenv import load_dotenv
 import os
 
+import logging
+from systemd import journal
+logger = logging.getLogger(__name__)
+logger.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER='custom_unit_name'))
+logger.setLevel(logging.DEBUG)
+
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL = int(os.getenv('CHANNEL_ID'))
@@ -70,6 +76,7 @@ class TOTD:
         return self.schedule[self.current_week][self.date].upper()
 
     def __repr__(self):
+        logger.info(f"Today is {self.date} in week {self.current_week}")
         if self.date == 'Saturday' or self.date == 'Sunday':
             return 'No TOTD today it\'s a weekend!'
         return 'Todays TOTD is: **%s** with **%s** as Backup' % (self.totd, self.backup)
@@ -122,6 +129,7 @@ class TOTDBot(commands.Bot):
 
     async def background_task(self, WHEN, task, cond):
         now = to_timezone(datetime.now())
+        logger.info(f"It is now: {now.timetz()}, waiting until {WHEN}")
         # If we are past the time we want, wait until midnight
         if now.timetz() > WHEN:
             tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
@@ -135,7 +143,9 @@ class TOTDBot(commands.Bot):
             seconds_until_target = (target_time - now).total_seconds()
             await asyncio.sleep(seconds_until_target)
             # Check passed in condition before running task
+            logger.info("Inside: Done waiting, checking condition")
             if cond(to_timezone(datetime.now())):
+                logger.info(f"Performing task at: {to_timezone(datetime.now())}")
                 await task()
             # Sleep until midnight
             tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
@@ -144,12 +154,12 @@ class TOTDBot(commands.Bot):
             await asyncio.sleep(seconds)
 
     async def on_ready(self):
-        print('Logged in as')
-        print(self.user.name)
-        print(self.user.id)
-        print(f'Sending next message at: {self.WHEN}')
-        print(f'It is currently {to_timezone(datetime.now())}')
-        print('------')
+        logger.info('Logged in as')
+        logger.info(self.user.name)
+        logger.info(self.user.id)
+        logger.info(f'Sending next message at: {self.WHEN}')
+        logger.info(f'It is currently {to_timezone(datetime.now())}')
+        logger.info('------')
 
     def add_commands(self):
 
