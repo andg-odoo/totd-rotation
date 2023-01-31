@@ -135,12 +135,14 @@ class TOTDBot(commands.Bot):
             tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
             tomorrow = to_timezone(tomorrow)
             seconds = (tomorrow - now).total_seconds()
+            logger.info(f"I need to sleep {seconds} seconds until midnight")
             await asyncio.sleep(seconds)
         while True:
             # Sleep until specific time
             now = to_timezone(datetime.now())
             target_time = to_timezone(datetime.combine(now.date(), WHEN))
             seconds_until_target = (target_time - now).total_seconds()
+            logger.info(f"I need to sleep {seconds} seconds until {WHEN}")
             await asyncio.sleep(seconds_until_target)
             # Check passed in condition before running task
             logger.info("Inside: Done waiting, checking condition")
@@ -151,6 +153,7 @@ class TOTDBot(commands.Bot):
             tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
             tomorrow = to_timezone(tomorrow)
             seconds = (tomorrow - now).total_seconds()
+            logger.info(f"Done with task, I need to sleep {seconds} seconds until {WHEN}")
             await asyncio.sleep(seconds)
 
     async def on_ready(self):
