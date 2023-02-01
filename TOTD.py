@@ -95,7 +95,7 @@ class TOTDBot(commands.Bot):
         super().__init__(command_prefix=command_prefix,
                          help_command=None, intents=intents, self_bot=self_bot)
         self.WHEN = to_timezone(kwargs.get('time', time(9, 0, 0)))
-        self.channel = self.get_channel(kwargs.get('channel'))
+        self.channel_id = kwargs.get('channel')
         self.role = kwargs.get('role')
         self.tracker = TOTD(kwargs.get('path'), kwargs.get('week'))
         self.add_commands()
@@ -121,8 +121,12 @@ class TOTDBot(commands.Bot):
 
     async def print_totd(self):  # Fired every day
         await self.wait_until_ready()
-        if self.channel:
-            await self.channel.send(self)
+        channel = self.get_channel(self.channel_id)
+        if channel:
+            logger.info(f"Sending message to {channel}")
+            await channel.send(self)
+        else:
+            logger.warning("No Channel Set, not sending message today")
 
     async def background_task(self, WHEN, task, cond):
         now = datetime.now(ZoneInfo('US/Pacific'))
@@ -139,7 +143,7 @@ class TOTDBot(commands.Bot):
             target_time = datetime.combine(now.date(), WHEN, ZoneInfo('US/Pacific'))
             logger.info(target_time)
             seconds_until_target = (target_time - now).total_seconds()
-            logger.info(f"I need to sleep {seconds} seconds until {WHEN}")
+            logger.info(f"I need to sleep {seconds_until_target} seconds until {WHEN}")
             await asyncio.sleep(seconds_until_target)
             # Check passed in condition before running task
             logger.info("Inside: Done waiting, checking condition")
@@ -150,7 +154,7 @@ class TOTDBot(commands.Bot):
             # Sleep until midnight
             tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0), ZoneInfo('US/Pacific'))
             seconds = (tomorrow - now).total_seconds()
-            logger.info(f"Done with task, I need to sleep {seconds} seconds until {WHEN}")
+            logger.info(f"Done with task, I need to sleep {seconds} seconds until midnight")
             await asyncio.sleep(seconds)
 
     async def on_ready(self):
