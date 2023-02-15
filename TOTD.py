@@ -29,9 +29,13 @@ CURRENT_WEEK = int(os.getenv('CURRENT_WEEK'))
 class TOTD:
     def __init__(self, document: str, current_week: int):
         self.current_week = current_week - 1
-
-        document = self._fetch_drive(document)
+        self.document_id = document
+        document = self._fetch_drive(self.document_id)
         self._build_schedule(document)
+
+    def refresh(self) -> None:
+        file_name = self._fetch_drive(document_id=self.document_id)
+        self._build_schedule(file_name)
 
     def _fetch_drive(self, document_id: str, file_name: str = 'totd.xlsx') -> str:
         if os.getenv('GDRIVE_ID'):
@@ -183,6 +187,11 @@ class TOTDBot(commands.Bot):
                     await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
             except:
                 await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
+
+        @self.command(name='fetch-totd', hidden=True)
+        async def update_rotation(ctx):
+            self.tracker.refresh()
+            await ctx.send("Refreshed Rotation. Run !totd to get the new TOTD")
 
 
 message_time = to_timezone(datetime.strptime(MESSAGE_TIME, '%H:%M:%S')).timetz()
