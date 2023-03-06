@@ -77,17 +77,19 @@ class TOTD:
 
     @property
     def totd(self):
-        return self.schedule[self.current_week][self.date].upper()
+        return self.schedule[self.current_week][self.date]
 
     def __repr__(self):
         logger.info(f"Today is {self.date} in week {self.current_week}")
         if self.date == 'Saturday' or self.date == 'Sunday':
             return 'No TOTD today it\'s a weekend!'
-        return 'Todays TOTD is: **%s** with **%s** as Backup' % (self.totd, self.backup)
+        return 'Todays TOTD is: ***%s*** with ***%s*** as Backup' % (self.totd, self.backup)
 
     @property
     def backup(self):
-        return random.choice(self.backups).upper()
+        day = datetime.today().weekday()
+        backup_id = day % len(self.backups)
+        return self.backups[backup_id]
 
 
 def to_timezone(timestamp: time|datetime, zone=ZoneInfo('US/Pacific')):
