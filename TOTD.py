@@ -6,14 +6,15 @@ from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 import asyncio
 import random
+from itertools import zip_longest
 
 from dotenv import load_dotenv
 import os
 
 import logging
-from systemd import journal
+# from systemd import journal
 logger = logging.getLogger(__name__)
-logger.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER='custom_unit_name'))
+# logger.addHandler(journal.JournalHandler(SYSLOG_IDENTIFIER='custom_unit_name'))
 logger.setLevel(logging.DEBUG)
 
 load_dotenv()
@@ -113,6 +114,10 @@ class TOTDBot(commands.Bot):
         # Print TOTD at a specific time
         self.loop.create_task(self.background_task(
             self.WHEN, self.print_totd, lambda x: x.weekday() < 5))
+        
+        #Create list of people Thursday morning for ticket review
+        self.loop.create_task(self.background_task(
+            self.WHEN, self.generate_popcorn, lambda x: x.weekday() == 3))
 
     async def increment_week(self):
         await self.wait_until_ready()
@@ -133,6 +138,32 @@ class TOTDBot(commands.Bot):
             await channel.send(self)
         else:
             logger.warning("No Channel Set, not sending message today")
+
+    def build_table(self, names):
+        longest = max(names, key=len)
+        width = len(longest) + 3
+        table = ''
+        numbered_names = tuple(enumerate(names))
+        offset = len(numbered_names[::2])
+        for a, b in zip_longest(numbered_names[::2], numbered_names[1::2]):
+            table += "\n{0:2} {1}{2:2} {3}".format(a[0]//2, a[1].ljust(width), b[0]//2 + offset if b else "", b[1] if b else "")
+        return table
+
+    async def generate_popcorn(self):
+        await self.wait_until_ready()
+        ctx = self.get_channel(self.channel_id)
+        if ctx:
+            logger.info(f"Generating present order to {ctx}")
+            if role := ctx.guild.get_role(self.role):
+                tech_members = role.members 
+                tech_order = [memb.display_name for memb in tech_members if "(jam)" not in memb.display_name]
+                random.shuffle(tech_order)
+
+                message = "Today's Presenting Order is:\n```"
+                message += self.build_table(tech_order)
+                message += "\n```*Note that if you are in onboarding currently you don't have to present.*"
+
+                await ctx.send(message)
 
     async def background_task(self, WHEN, task, cond):
         now = datetime.now(ZoneInfo('US/Pacific'))
@@ -174,11 +205,11 @@ class TOTDBot(commands.Bot):
     def add_commands(self):
 
         @self.command(hidden=True)
-        async def totd(ctx):
+        async def totd(ctx: commands.Context):
             await ctx.send(self)
 
         @self.command(name='set-week', hidden=True)
-        async def set_week(ctx, week_num):
+        async def set_week(ctx: commands.Context, week_num: str):
             try:
                 int_week = int(week_num)
                 int_week -= 1 # decrement to 0 index internally
@@ -191,10 +222,23 @@ class TOTDBot(commands.Bot):
                 await ctx.send("**Error:** *Must be an int between 1 and 5 inclusive.*")
 
         @self.command(name='fetch-totd', hidden=True)
-        async def update_rotation(ctx):
+        async def update_rotation(ctx: commands.Context):
             self.tracker.refresh()
             await ctx.send("Refreshed Rotation. Run !totd to get the new TOTD")
 
+        # @self.command(name="thursday")
+        # async def thursday(ctx: commands.Context):
+        #     logger.info(f"Generating present order to {ctx}")
+        #     if role := ctx.guild.get_role(self.role):
+        #         tech_members = role.members 
+        #         tech_order = [memb.display_name for memb in tech_members if "(jam)" not in memb.display_name]
+        #         random.shuffle(tech_order)
+
+        #         message = "Today's Presenting Order is:\n```"
+        #         message += self.build_table(tech_order)
+        #         message += "\n```*Note that if you are in onboarding currently you don't have to present.*"
+
+        #         await ctx.send(message)
 
 message_time = to_timezone(datetime.strptime(MESSAGE_TIME, '%H:%M:%S')).timetz()
 bot = TOTDBot(command_prefix="!",
