@@ -123,19 +123,32 @@ class TOTDBot(commands.Bot):
         await self.wait_until_ready()
         self.tracker.next_week()
 
-    def __repr__(self):
-        if self.role:
-            totd_string = "<@&%d>: %s" % (self.role, self.tracker)
-        else:
-            totd_string = "Good Morning: %s" % (self.tracker)
-        return totd_string
+    def build_totd_string(self, ctx):
+        logger.info(f"Today is {self.tracker.date} in week {self.tracker.current_week}")
+        if self.tracker.date == 'Saturday' or self.tracker.date == 'Sunday':
+            return 'No TOTD today it\'s a weekend!'
+        totd_name = self.tracker.totd
+        backup_name = self.tracker.backup
+        totd_member, backup_member = None, None
+
+        for member in ctx.guild.members:
+            if f"({totd_name.lower()})" in member.name.lower():
+                totd_member = member
+            if f"({backup_name.lower()})" in member.name.lower():
+                backup_member = member
+
+        if totd_member:
+            totd_name = totd_member.mention
+        if backup_member:
+            backup_name = backup_member.name
+        return 'Good Morning: Todays TOTD is: ***%s*** with ***%s*** as Backup' % (totd_name, backup_name)
 
     async def print_totd(self):  # Fired every day
         await self.wait_until_ready()
-        channel = self.get_channel(self.channel_id)
-        if channel:
-            logger.info(f"Sending message to {channel}")
-            await channel.send(self)
+        ctx = self.get_channel(self.channel_id)
+        if ctx:
+            logger.info(f"Sending message to {ctx}")
+            await ctx.send(self.build_totd_string(ctx))
         else:
             logger.warning("No Channel Set, not sending message today")
 
@@ -206,7 +219,7 @@ class TOTDBot(commands.Bot):
 
         @self.command(hidden=True)
         async def totd(ctx: commands.Context):
-            await ctx.send(self)
+            await ctx.send(self.build_totd_string(ctx))
 
         @self.command(name='set-week', hidden=True)
         async def set_week(ctx: commands.Context, week_num: str):
